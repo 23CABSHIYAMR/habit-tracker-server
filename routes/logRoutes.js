@@ -131,11 +131,11 @@ router.get("/week/:weekKey", async (req, res) => {
     const logs = await HabitLog.find({ year, weekOfYear: week }).populate(
       "habitId"
     );
-
+console.log(logs)
 if(logs){
       const grouped = {};
     logs.forEach((log) => {
-      const id = log.habitId._id;
+      const id = log?.habitId?._id;
       if (!grouped[id]) grouped[id] = [];
       grouped[id].push(log);
     });

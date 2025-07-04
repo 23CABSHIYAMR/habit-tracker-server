@@ -132,7 +132,8 @@ router.get("/week/:weekKey", async (req, res) => {
       "habitId"
     );
 
-    const grouped = {};
+if(logs){
+      const grouped = {};
     logs.forEach((log) => {
       const id = log.habitId._id;
       if (!grouped[id]) grouped[id] = [];
@@ -140,6 +141,11 @@ router.get("/week/:weekKey", async (req, res) => {
     });
 
     res.json({ raw: logs, groupedByHabit: grouped });
+}else{
+   res
+      .status(404)
+      .json({ error: "logs not found" });
+}
   } catch (err) {
     res
       .status(500)

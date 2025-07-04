@@ -7,11 +7,7 @@ const habitLogRoutes = require("./routes/logRoutes");
 const port = 5000;
 const app = express();
 
-app.use(
-  cors({
-    origin: [`http://localhost:5173`,'https://habit-tracker-lemon-nu.vercel.app/'],
-  })
-);
+app.use(cors(  ));
 app.use(express.json());
 
 app.use("/habits", habitRoutes);

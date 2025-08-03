@@ -1,23 +1,34 @@
-// routes/taskRoutes.js
 const express = require("express");
 const router = express.Router();
 const Habit = require("../models/taskSchema");
 const HabitLog = require("../models/habitLogSchema");
+const protect = require('../middleware/authMiddleware');
 
 // POST /habits - Create a new habit
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const { habitName, habitType, weekFrequency, palette, order } = req.body;
     if (!habitName || !Array.isArray(weekFrequency)) {
       return res.status(400).json({ error: "Missing required habit fields" });
     }
-    const today=new Date();
-    const progress={
-      totalCompleted:0,
-      weekCounts:new Array(53).fill(0)
-    }
-    const newHabit = new Habit({ habitName, habitType, weekFrequency, palette, order });
-    newHabit.yearlyProgress.set(today.getFullYear().toString(),progress)
+
+    const today = new Date();
+    const progress = {
+      totalCompleted: 0,
+      weekCounts: new Array(53).fill(0),
+    };
+
+    const newHabit = new Habit({
+      habitName,
+      habitType,
+      weekFrequency,
+      palette,
+      order,
+      userId: req.user._id, // Associate habit with logged-in user
+    });
+
+    newHabit.yearlyProgress.set(today.getFullYear().toString(), progress);
+
     await newHabit.save();
     res.status(201).json(newHabit);
   } catch (err) {
@@ -26,36 +37,40 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/",async(req,res)=>{
-  try{
-    const AllHabits=await Habit.find();
-    res.json(AllHabits);
-
-  }
-  catch(err){
-    res.status(500).json({ error: "Failed to fetch habit", details: err.message });
-  }
-})
-// PUT /habits/:id - Update a habit
-router.put("/:id", async (req, res) => {
+// GET /habits - Get all habits for the logged-in user
+router.get("/", protect, async (req, res) => {
   try {
-    const updated = await Habit.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ error: "Habit not found" });
-    res.json(updated);
+    const allHabits = await Habit.find({ userId: req.user._id }); // Only user's habits
+    res.json(allHabits);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch habits", details: err.message });
+  }
+});
+
+// PUT /habits/:id - Update a habit (only if it belongs to the user)
+router.put("/:id", protect, async (req, res) => {
+  try {
+    const habit = await Habit.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!habit) return res.status(404).json({ error: "Habit not found or unauthorized" });
+
+    Object.assign(habit, req.body);
+    await habit.save();
+
+    res.json(habit);
   } catch (err) {
     res.status(400).json({ error: "Failed to update habit", details: err.message });
   }
 });
 
-// DELETE /habits/:id - Delete a habit and associated logs
-router.delete("/:id", async (req, res) => {
-  try { 
-    const habitId = req.params.id;
-    await HabitLog.deleteMany({ habitId }); // cascade delete logs
-    const deleted = await Habit.findByIdAndDelete(habitId);
-    if (!deleted) return res.status(404).json({ error: "Habit not found" });
+// DELETE /habits/:id - Delete a habit and associated logs (if user owns it)
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    const habit = await Habit.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    if (!habit) return res.status(404).json({ error: "Habit not found or unauthorized" });
 
-    res.json({ message: "Habit and logs deleted", habit: deleted });
+    await HabitLog.deleteMany({ habitId: habit._id }); // Cascade delete logs
+
+    res.json({ message: "Habit and logs deleted", habit });
   } catch (err) {
     res.status(400).json({ error: "Failed to delete habit", details: err.message });
   }

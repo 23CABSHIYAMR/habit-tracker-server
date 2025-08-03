@@ -24,6 +24,11 @@ const taskSchema = new mongoose.Schema(
       of: weekProgressSchema,
       default: {},
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+          }
   },
   { timestamps: true }
 );

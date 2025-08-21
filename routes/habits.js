@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Habit = require("../models/taskSchema");
+const Habit = require("../models/HabitSchema");
 const HabitLog = require("../models/habitLogSchema");
 const protect = require('../middleware/authMiddleware');
 
@@ -17,11 +17,12 @@ router.post("/", protect, async (req, res) => {
       totalCompleted: 0,
       weekCounts: new Array(53).fill(0),
     };
-
+    const weeklyTarget=weekFrequency.filter(Boolean).length;
     const newHabit = new Habit({
       habitName,
       habitType,
       weekFrequency,
+      weeklyTarget,
       palette,
       order,
       userId: req.user._id, // Associate habit with logged-in user

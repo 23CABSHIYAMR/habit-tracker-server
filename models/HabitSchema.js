@@ -8,7 +8,7 @@ const weekProgressSchema = new mongoose.Schema({
   },
 });
 
-const taskSchema = new mongoose.Schema(
+const HabitSchema = new mongoose.Schema(
   {
     habitName: { type: String, required: true },
     habitType: { type: String, default: "To-Do" },
@@ -16,6 +16,8 @@ const taskSchema = new mongoose.Schema(
       type: [Boolean],
       default: [true, true, true, true, true, true, true],
     },
+    weeklyTarget:{type:Number,default:0}
+    ,
     palette: { type: String, default: "#009bff" },
     order: { type: Number, required: true },
     
@@ -33,4 +35,4 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Habit", taskSchema, "habits");
+module.exports = mongoose.model("Habit", HabitSchema, "habits");

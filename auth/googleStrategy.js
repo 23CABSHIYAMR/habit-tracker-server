@@ -4,9 +4,6 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/User.js";
 import { generateToken } from "../utils/generateToken.js";
 
-console.log("GOOGLE ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("CALLBACK:", process.env.GOOGLE_CALLBACK_URL);
-
 // ✅ Google OAuth setup
 passport.use(
   new GoogleStrategy(

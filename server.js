@@ -31,7 +31,7 @@ app.use("/habitLog", habitLogRoutes);
 app.use("/users", userRoute);
 app.use("/api", tokenRoutes);
 app.use("/auth", authRoutes);
-
+ 
 // Start Server
 connectToDb().then(() => {
   app.listen(port, () => {

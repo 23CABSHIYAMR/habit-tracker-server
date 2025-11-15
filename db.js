@@ -12,4 +12,4 @@ export async function connectToDb() {
     process.exit(1);
   }
 }
-
+ 

@@ -157,7 +157,7 @@ router.delete("/uncomplete", async (req, res) => {
     const normalizedDate = normalizeDate(date);
     if (!normalizedDate)
       return res.status(400).json({ message: "Invalid date format" });
-
+ 
     const log = await HabitLog.findOne({
       userId,
       habitId,

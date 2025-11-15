@@ -54,7 +54,7 @@ router.post("/sign-up", async (req, res) => {
       password,
       agreedToTerms,
       oauthSignup,
-    } = req.body;
+    } = req.body; 
 
     if (!firstName || !lastName || !email || !password)
       return res.status(400).json({ error: "All fields are required" });

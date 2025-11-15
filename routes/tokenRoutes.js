@@ -18,7 +18,7 @@ router.post("/set-token", (req, res) => {
 
   return res.json({ success: true });
 });
-
+ 
 router.get("/get-token", (req, res) => {
   const token = req.cookies.authToken;
   return res.json({ token });

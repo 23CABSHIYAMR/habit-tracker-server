@@ -7,7 +7,7 @@ const weekProgressSchema = new mongoose.Schema({
     default: () => Array(53).fill(0),
   },
 });
-
+ 
 const habitSchema = new mongoose.Schema(
   {
     habitName: { type: String, required: true },

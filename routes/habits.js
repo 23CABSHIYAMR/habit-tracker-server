@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/", protect, async (req, res) => {
   try {
     const { habitName, habitType, weekFrequency, palette, order } = req.body;
-
+ 
     if (!habitName || !Array.isArray(weekFrequency)) {
       return res.status(400).json({ error: "Missing required habit fields" });
     }

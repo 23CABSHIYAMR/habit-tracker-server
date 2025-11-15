@@ -14,7 +14,7 @@ router.post("/set-token", (req, res) => {
     secure: true,       // ✅ in localhost HTTPS this should be false unless behind proxy
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000,
-  });
+  }); 
 
   return res.json({ success: true });
 });

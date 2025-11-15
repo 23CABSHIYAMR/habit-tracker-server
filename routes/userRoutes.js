@@ -13,35 +13,6 @@ const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
 // --------------------------------------------------
-// ✅ REGISTER (email + password)
-// POST /api/users/register
-// --------------------------------------------------
-router.post("/register", async (req, res) => {
-  console.log("Body:", req.body);
-
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "Missing fields" });
-
-  try {
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ error: "User already exists" });
-
-    const user = await User.create({ name, email, password });
-
-    return res.status(201).json({
-      token: generateToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email },
-    });
-  } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ error: "Server error" });
-  }
-});
-
-// --------------------------------------------------
 // ✅ SIGN-UP (your custom signup method)
 // POST /auth/sign-up
 // --------------------------------------------------

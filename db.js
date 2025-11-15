@@ -1,9 +1,10 @@
-const mongoose = require("mongoose");
+import "dotenv/config";
+import mongoose from "mongoose";
 
-async function connectToDb() {
+export async function connectToDb() {
   try {
     await mongoose.connect(
-      "mongodb+srv://shiyamramesh01:admin@habit-tracker-cluster.4qp1bsn.mongodb.net/habitTrackerDB"
+      process.env.MONGODB_SRV
     );
     console.log("db connected");
   } catch (err) {
@@ -12,4 +13,3 @@ async function connectToDb() {
   }
 }
 
-module.exports = { connectToDb };

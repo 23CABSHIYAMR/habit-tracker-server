@@ -1,38 +1,63 @@
-const express = require("express");
-const HabitLog = require("../models/habitLogSchema");
-const Habit = require("../models/HabitSchema");
-const router = express.Router();
-const { getWeek, getYear } =require("date-fns");
+import express from "express";
+import HabitLog from "../models/habitLogSchema.js";
+import Habit from "../models/HabitSchema.js";
+import { getWeek, getYear } from "date-fns";
 
+const router = express.Router();
+
+// ------------------------------------------------------------
+// ✅ Utility: Convert date string safely
+// ------------------------------------------------------------
+const normalizeDate = (dateStr) => {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return d.toISOString().split("T")[0]; // YYYY-MM-DD
+};
+
+// ------------------------------------------------------------
+// ✅ GET logs for a specific date (auto-create missing logs)
+// ------------------------------------------------------------
 router.get("/date/:date", async (req, res) => {
   try {
     const { date } = req.params;
     const { userId } = req.query;
-    if (!date || !userId) {
-      return res.status(400).json({ message: "Missing date or userId to fetch" });
-    }
 
+    if (!userId || !date)
+      return res.status(400).json({ message: "Missing userId or date" });
+
+    const normalizedDate = normalizeDate(date);
+    if (!normalizedDate)
+      return res.status(400).json({ message: "Invalid date format" });
+
+    // ✅ Find logs for this user & date
     let logs = await HabitLog.find({
-      date,
-      userId
+      userId,
+      date: normalizedDate,
     }).populate("habitId");
 
+    // ✅ Auto-create logs if missing
     if (logs.length === 0) {
-      const habits = await Habit.find({userId});
-      
-      const d = new Date(date);
-      const weekOfYear = getWeek(d); 
-      const year = getYear(d); 
+      const habits = await Habit.find({ userId });
+
+      const d = new Date(normalizedDate);
+      const weekOfYear = getWeek(d);
+      const year = getYear(d);
+
       const newLogs = habits.map((habit) => ({
-        userId: habit.userId,    
+        userId,
         habitId: habit._id,
-        date,
+        date: normalizedDate,
+        status: "pending",
         weekOfYear,
         year,
-        status: "pending",
       }));
+
       await HabitLog.insertMany(newLogs);
-      logs = await HabitLog.find({ date }).populate("habitId");
+
+      logs = await HabitLog.find({
+        userId,
+        date: normalizedDate,
+      }).populate("habitId");
     }
 
     res.json(logs);
@@ -42,51 +67,69 @@ router.get("/date/:date", async (req, res) => {
   }
 });
 
+// ------------------------------------------------------------
+// ✅ GET logs for a date range
+// ------------------------------------------------------------
 router.get("/range", async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, userId } = req.query;
 
-    if (!startDate || !endDate) {
-      return res.status(400).json({ message: "Missing date range" });
-    }
+    if (!userId || !startDate || !endDate)
+      return res.status(400).json({ message: "Missing userId or date range" });
+
+    const s = new Date(startDate);
+    const e = new Date(endDate);
+
+    if (isNaN(s) || isNaN(e))
+      return res.status(400).json({ message: "Invalid date range" });
 
     const logs = await HabitLog.find({
-      date: { $gt: new Date(startDate), $lt: new Date(endDate) },
+      userId,
+      date: { $gte: s, $lte: e },
     }).populate("habitId");
+
     res.json(logs);
   } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error fetching logs:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-/**
- * Mark a date as completed
- * - Creates a log entry if not exists
- */
-
+// ------------------------------------------------------------
+// ✅ Complete a habit for a date
+// ------------------------------------------------------------
 router.post("/complete", async (req, res) => {
   try {
-    const { userId,habitId, date } = req.body;
+    const { userId, habitId, date } = req.body;
 
-    if (!habitId || !date || !userId) {
-      return res.status(400).json({ message: "Missing habitId, date, or userId" });
-    }
-    console.log("date->",date);
-    let log = await HabitLog.findOne({ habitId, date, userId });
-      const d = new Date(date);
-      const weekOfYear = getWeek(d); 
-      const year = getYear(d); 
+    if (!userId || !habitId || !date)
+      return res
+        .status(400)
+        .json({ message: "Missing userId, habitId or date" });
+
+    const normalizedDate = normalizeDate(date);
+    if (!normalizedDate)
+      return res.status(400).json({ message: "Invalid date format" });
+
+    const d = new Date(normalizedDate);
+    const weekOfYear = getWeek(d);
+    const year = getYear(d);
+
+    let log = await HabitLog.findOne({
+      userId,
+      habitId,
+      date: normalizedDate,
+    });
 
     if (!log) {
-      log = new HabitLog({
-        habitId,
+      log = await HabitLog.create({
         userId,
-        date,
+        habitId,
+        date: normalizedDate,
         status: "completed",
         weekOfYear,
         year,
       });
-      await log.save();
     } else {
       log.status = "completed";
       await log.save();
@@ -99,28 +142,38 @@ router.post("/complete", async (req, res) => {
   }
 });
 
-
-/**
- * Unmark a completed log (set back to pending/inactive)
- * - Removes the log since we only persist completed ones
- */
+// ------------------------------------------------------------
+// ✅ Un-complete a habit → set back to pending
+// ------------------------------------------------------------
 router.delete("/uncomplete", async (req, res) => {
   try {
-    const {userId, habitId, date } = req.body;
+    const { userId, habitId, date } = req.body;
 
-    if (!habitId || !date) {
-      return res.status(400).json({ message: "Missing habitId or date" });
-    }
-    console.log(req.body);
-    await HabitLog.deleteOne({ habitId, date });
+    if (!userId || !habitId || !date)
+      return res
+        .status(400)
+        .json({ message: "Missing userId, habitId or date" });
 
-    res.json({
-      message: "Log removed, fallback to pending/inactive in frontend",
+    const normalizedDate = normalizeDate(date);
+    if (!normalizedDate)
+      return res.status(400).json({ message: "Invalid date format" });
+
+    const log = await HabitLog.findOne({
+      userId,
+      habitId,
+      date: normalizedDate,
     });
+
+    if (log) {
+      log.status = "pending";
+      await log.save();
+    }
+
+    res.json({ message: "Updated to pending" });
   } catch (err) {
-    console.error("Error removing log:", err);
+    console.error("Error uncompleting habit:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-module.exports = router;
+export default router;

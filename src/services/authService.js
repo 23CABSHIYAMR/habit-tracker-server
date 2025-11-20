@@ -23,11 +23,14 @@ export const registerUser = async ({
     agreedToTerms,
     oauthSignup,
   });
+    const token = generateToken({ id: user._id });
+
 
   return {
-    id: user._id,
+    token, 
+    user:{id: user._id,
     userName: user.userName,
-    email: user.email,
+    email: user.email}
   };
 };
 

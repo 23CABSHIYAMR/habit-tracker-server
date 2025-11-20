@@ -4,23 +4,20 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectToDb } from "./db.js";
 
-// Routes
-import habitRoutes from "./routes/habits.js";
-import habitLogRoutes from "./routes/logRoutes.js";
-import userRoute from "./routes/userRoutes.js";
-import tokenRoutes from "./routes/tokenRoutes.js";
-import authRoutes from "./auth/authRoutes.js";
+import habitRoutes from "#routes/habits.js";
+import habitLogRoutes from "#routes/log.js";
+import tokenRoutes from "#routes/token.js";
+import authRoutes from "#routes/auth/index.js";
 
 const port = 5000;
 const app = express();
 
-// CORS
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL,
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -28,7 +25,6 @@ app.use(cookieParser());
 // Routing
 app.use("/habits", habitRoutes);
 app.use("/habitLog", habitLogRoutes);
-app.use("/users", userRoute);
 app.use("/api", tokenRoutes);
 app.use("/auth", authRoutes);
  

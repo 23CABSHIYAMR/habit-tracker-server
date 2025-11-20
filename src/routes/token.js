@@ -2,6 +2,8 @@ import express from "express";
 
 const router = express.Router();
 
+const COOKIE_NAME = "token";
+
 router.post("/set-token", (req, res) => {
   const { token } = req.body;
 
@@ -9,23 +11,29 @@ router.post("/set-token", (req, res) => {
     return res.status(400).json({ error: "Token missing" });
   }
 
-  res.cookie("authToken", token, {
+  res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: true,       // ✅ in localhost HTTPS this should be false unless behind proxy
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
-  }); 
+    path: "/",
+  });
 
   return res.json({ success: true });
 });
- 
+
 router.get("/get-token", (req, res) => {
-  const token = req.cookies.authToken;
+  const token = req.cookies[COOKIE_NAME] || null;
   return res.json({ token });
 });
 
 router.get("/delete-token", (req, res) => {
-  res.clearCookie("authToken");
+  res.clearCookie(COOKIE_NAME, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none" ,
+    path: "/",
+  });
   return res.json({ success: true });
 });
 

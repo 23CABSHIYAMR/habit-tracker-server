@@ -3,11 +3,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+"imports": {
+  "#src/*": "./src/*",
+  "#routes/*": "./src/routes/*",
+  "#models/*": "./src/models/*",
+  "#controllers/*": "./src/controllers/*",
+  "#services/*": "./src/services/*",
+  "#utils/*": "./src/utils/*",
+  "#middleware/*": "./src/middleware/*",
+  "#auth/*": "./src/auth/*"
+}
+,
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js"
-  }, 
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -1,43 +1,25 @@
 import mongoose from "mongoose";
 
-const weekProgressSchema = new mongoose.Schema({
-  totalCompleted: { type: Number, default: 0 },
-  weekCounts: {
-    type: [Number],
-    default: () => Array(53).fill(0),
-  },
-});
- 
 const habitSchema = new mongoose.Schema(
   {
-    habitName: { type: String, required: true },
-    habitType: { type: String, default: "To-Do" },
-
-    weekFrequency: {
-      type: [Boolean],
-      default: [true, true, true, true, true, true, true],
-    },
-
-    weeklyTarget: {
-      type: Number,
-      default: 0,
-    },
-
-    palette: { type: String, default: "#009bff" },
-
-    order: { type: Number, required: true },
-
-    yearlyProgress: {
-      type: Map,
-      of: weekProgressSchema,
-      default: () => ({}),
-    },
-
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    }
+    },
+    habitName: { type: String, required: true },
+    isPositiveHabit: { type: Boolean, default: true },
+    weekFrequency: {
+      type: [Boolean],
+      default: [true, true, true, true, true, true, true],
+      validate: (v) => v.length === 7,
+    },
+    weeklyTarget: {
+      type: Number,
+      required: true,
+    },
+    palette: { type: String, default: "#009bff" },
+    order: { type: Number, required: true },
   },
   { timestamps: true }
 );

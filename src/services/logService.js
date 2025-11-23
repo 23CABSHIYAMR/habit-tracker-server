@@ -48,6 +48,7 @@ export const getLogsForDate = async ({ user, date }) => {
     results.push({
       habitId: habit._id,
       habitName: habit.habitName,
+      isPositiveHabit:habit.isPositiveHabit,
       palette: habit.palette,
       order: habit.order,
       weekFrequency: habit.weekFrequency,

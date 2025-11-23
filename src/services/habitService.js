@@ -7,14 +7,21 @@ export const createHabit = async ({
   isPositiveHabit,
   weekFrequency,
   palette,
-  order,
 }) => {
-  if (!habitName || !Array.isArray(weekFrequency) || weekFrequency.length !== 7) {
+  if (
+    !habitName ||
+    !Array.isArray(weekFrequency) ||
+    weekFrequency.length !== 7
+  ) {
     throw { status: 400, message: "Invalid habit fields" };
   }
 
   const weeklyTarget = weekFrequency.filter(Boolean).length;
+  const lastHabit = await Habit.findOne({ userId })
+  .sort({ order: -1 })
+  .select("order");
 
+const order = lastHabit ? lastHabit.order + 1 : 1;
   const newHabit = await Habit.create({
     userId,
     habitName,

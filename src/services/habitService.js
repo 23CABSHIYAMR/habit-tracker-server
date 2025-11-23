@@ -50,7 +50,7 @@ export const getHabits = async (userId) => {
 export const updateHabit = async ({ userId, habitId, updates }) => {
   const allowedFields = ["habitName", "isPositiveHabit", "palette", "order"];
   const habit = await Habit.findOne({ _id: habitId, userId });
-
+  console.log(habitId,updates,habit)
   if (!habit) throw { status: 404, message: "Habit not found" };
 
   for (const key of allowedFields) {

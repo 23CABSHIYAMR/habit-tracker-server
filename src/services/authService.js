@@ -23,14 +23,11 @@ export const registerUser = async ({
     agreedToTerms,
     oauthSignup,
   });
-    const token = generateToken({ id: user._id });
-
+  const token = generateToken({ id: user._id });
 
   return {
-    token, 
-    user:{id: user._id,
-    userName: user.userName,
-    email: user.email}
+    token,
+    user: { id: user._id, userName: user.userName, email: user.email },
   };
 };
 
@@ -53,6 +50,7 @@ export const loginUser = async ({ email, password }) => {
       id: user._id,
       userName: user.userName,
       email: user.email,
+      createdAt: user.createdAt,
     },
   };
 };
@@ -62,15 +60,16 @@ export const getMe = async (user) => {
     id: user._id,
     userName: user.userName,
     email: user.email,
+    createdAt: user.createdAt,
   };
 };
 
 /* Google OAuth callback (called from googleStrategy.js) */
 export const oauthLogin = async (googleUser) => {
   const email = googleUser.email.toLowerCase();
-
+  
   let user = await User.findOne({ email });
-
+  
   if (!user) {
     user = await User.create({
       userName: googleUser.userName,
@@ -80,15 +79,16 @@ export const oauthLogin = async (googleUser) => {
       agreedToTerms: true,
     });
   }
-
+  
   const token = generateToken({ id: user._id });
-
+  
   return {
     token,
     user: {
       id: user._id,
       userName: user.userName,
       email: user.email,
+      createdAt: user.createdAt,
     },
   };
 };

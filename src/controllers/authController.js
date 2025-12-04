@@ -4,7 +4,7 @@ const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  sameSite: "none",
   path: "/",
   maxAge: 60 * 60 * 24 * 1,
 };
@@ -16,7 +16,6 @@ export const register = async (req, res) => {
     res.cookie(COOKIE_NAME, token, {
       ...COOKIE_OPTIONS,
       secure: !isLocalhost,
-      sameSite: isLocalhost ? "lax" : "none",
     });
     console.log("🔐 Cookie SET on backend:", {
       name: COOKIE_NAME,
@@ -39,7 +38,6 @@ export const login = async (req, res) => {
     res.cookie(COOKIE_NAME, token, {
       ...COOKIE_OPTIONS,
       secure: !isLocalhost,
-      sameSite: isLocalhost ? "lax" : "none",
     });
     console.log("🔐 Cookie SET on backend:", {
       name: COOKIE_NAME,

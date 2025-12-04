@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin:["http://localhost:3000","https://habit-tracker-client-bay.vercel.app"] ,
     credentials: true,
   })
 );

@@ -4,7 +4,7 @@ import * as authService from "#services/authService.js";
 const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
   path: "/",
   maxAge: 1000 * 60 * 60 * 24 * 1,

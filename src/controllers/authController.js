@@ -3,8 +3,8 @@ import * as authService from "#services/authService.js";
 const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production"?"none":"lax",
   path: "/",
   maxAge: 60 * 60 * 24 * 1,
 };
@@ -13,6 +13,12 @@ export const register = async (req, res) => {
     const { token, user } = await authService.registerUser(req.body);
 
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+    console.log("🔐 Cookie SET on backend:", {
+  name: COOKIE_NAME,
+  token: token.slice(0, 15) + "...", // don't print full JWT
+  options: COOKIE_OPTIONS,
+});
+
     res.status(201).json({ user });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
@@ -23,6 +29,12 @@ export const login = async (req, res) => {
   try {
     const { token, user } = await authService.loginUser(req.body);
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+    console.log("🔐 Cookie SET on backend:", {
+  name: COOKIE_NAME,
+  token: token.slice(0, 15) + "...", // don't print full JWT
+  options: COOKIE_OPTIONS,
+});
+
     res.json({ user });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

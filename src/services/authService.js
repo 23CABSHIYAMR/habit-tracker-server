@@ -55,11 +55,12 @@ export const loginUser = async ({ email, password }) => {
 };
 
 export const getMe = async (user) => {
+  const userData = await User.find({user});
   return {
-    id: user._id,
-    userName: user.userName,
-    email: user.email,
-    createdAt: user.createdAt,
+    id: userData._id,
+    userName: userData.userName,
+    email: userData.email,
+    createdAt: userData.createdAt,
   };
 };
 

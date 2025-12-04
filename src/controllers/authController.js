@@ -1,9 +1,20 @@
 import * as authService from "#services/authService.js";
 
+
+const COOKIE_NAME = "token";
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  path: "/",
+  maxAge: 1000 * 60 * 60 * 24 * 1,
+};
 export const register = async (req, res) => {
   try {
-    const result = await authService.registerUser(req.body);
-    res.status(201).json(result);
+    const {token,user} = await authService.registerUser(req.body);
+
+    res.cookie(COOKIE_NAME,token,COOKIE_OPTIONS);
+    res.status(201).json({user});
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -11,8 +22,9 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const result = await authService.loginUser(req.body);
-    res.json(result);
+    const {token,user} = await authService.loginUser(req.body);
+    res.cookie(COOKIE_NAME,token,COOKIE_OPTIONS);
+    res.json({user});
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -27,28 +39,33 @@ export const getMe = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------
-   Google OAuth redirect handler
-------------------------------------------------------- */
 export const oauthRedirect = async (req, res) => {
   try {
     const { token, user } = req.user;
-
-    // Send only required user fields, never raw DB object
-    const sanitizedUser = {
-      id: user.id,
-      userName: user.userName,
-      email: user.email,
-    };
-
+    
+    res.cookie(COOKIE_NAME,token,COOKIE_OPTIONS);
+    
+    
     const redirectURL =
-      `${process.env.FRONTEND_URL}/auth/oauth` +
-      `?token=${encodeURIComponent(token)}` +
-      `&user=${encodeURIComponent(JSON.stringify(sanitizedUser))}`;
-
-    res.redirect(redirectURL);
+    `${process.env.FRONTEND_URL}/auth/oauth?user=${encodeURIComponent(JSON.stringify(user))}`;
+    
+    return res.redirect(redirectURL);
   } catch (err) {
     console.error("OAuth redirect error:", err);
-    res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=oauth_failed`);
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=oauth_failed`);
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie(COOKIE_NAME, {
+      path: "/",
+      sameSite: "strict",
+      secure: true,
+    });
+
+    return res.json({ message: "Logged out successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: "Logout failed" });
   }
 };

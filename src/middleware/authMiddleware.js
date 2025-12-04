@@ -4,13 +4,11 @@ import User from "../models/User.js";
 
 export default async function protect(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.token;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return res.status(401).json({ error: "Not authorized, token missing" });
     }
-
-    const token = authHeader.split(" ")[1];
 
     let decoded;
     try {

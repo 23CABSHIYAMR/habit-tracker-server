@@ -6,7 +6,6 @@ import { connectToDb } from "./db.js";
 
 import habitRoutes from "#routes/habits.js";
 import habitLogRoutes from "#routes/log.js";
-import tokenRoutes from "#routes/token.js";
 import authRoutes from "#routes/auth/index.js";
 
 const port = 5000;
@@ -25,7 +24,6 @@ app.use(cookieParser());
 // Routing
 app.use("/habits", habitRoutes);
 app.use("/habitLog", habitLogRoutes);
-app.use("/api", tokenRoutes);
 app.use("/auth", authRoutes);
  
 // Start Server

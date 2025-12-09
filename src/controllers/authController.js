@@ -4,7 +4,7 @@ const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  sameSite: "none",
   path: "/",
   maxAge: 60 * 60 * 24,
 };
@@ -62,7 +62,7 @@ export const logout = async (req, res) => {
     res.clearCookie(COOKIE_NAME, {
       path: "/",
       secure:  process.env.NODE_ENV === "production",
-      sameSite:  process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "none",
     });
     return res.json({ message: "Logged out successfully" });
   } catch (err) {

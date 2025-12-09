@@ -19,14 +19,19 @@ export const registerUser = async ({
   const user = await User.create({
     userName,
     email: email.toLowerCase(),
-    password: oauthSignup ? null : password,
+    password: oauthSignup ? undefined : password,
     agreedToTerms,
     oauthSignup,
   });
   const token = generateToken({ id: user._id });
   return {
     token,
-    user: { id: user._id, userName: user.userName, email: user.email,createdAt:user.createdAt },
+    user: {
+      id: user._id,
+      userName: user.userName,
+      email: user.email,
+      createdAt: user.createdAt,
+    },
   };
 };
 
@@ -63,24 +68,23 @@ export const getMe = async (user) => {
   };
 };
 
-/* Google OAuth callback (called from googleStrategy.js) */
 export const oauthLogin = async (googleUser) => {
   const email = googleUser.email.toLowerCase();
-  
+
   let user = await User.findOne({ email });
-  
+
   if (!user) {
     user = await User.create({
       userName: googleUser.userName,
       email,
-      password: null,
+      password: undefined,
       oauthSignup: true,
       agreedToTerms: true,
     });
   }
-  
+
   const token = generateToken({ id: user._id });
-  
+
   return {
     token,
     user: {

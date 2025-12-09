@@ -4,6 +4,7 @@ import {
   normalizeUTC,
   isInCurrentWeekUTC,
   validateDateAgainstHabit,
+  countExpectedDays,
   isAfter,
   isSameWeek,
 } from "#utils/date.js";
@@ -129,4 +130,51 @@ export const uncompleteHabitForDate = async ({ user, habitId, date }) => {
   await HabitLog.deleteOne({ userId: user._id, habitId, date: d });
 
   return { success: true };
+};
+export const getAnalyticsForRange = async ({ user, startDate, endDate }) => {
+  const s = normalizeUTC(startDate);
+  const e = normalizeUTC(endDate);
+  if (!s || !e) throw { status: 400, message: "Invalid date range" };
+
+  // Fetch user's habits
+  const habits = await Habit.find({ userId: user._id })
+    .select("_id habitName palette weekFrequency isPositiveHabit")
+    .lean();
+
+  // Fetch logs in the range
+  const logs = await HabitLog.find({
+    userId: user._id,
+    date: { $gte: s, $lte: e },
+  }).lean();
+
+  // Map logs by habitId
+  const grouped = {};
+  logs.forEach((log) => {
+    const hid = log.habitId.toString();
+    if (!grouped[hid]) grouped[hid] = { completed: 0};
+    if (log.status === true) grouped[hid].completed++;
+  });
+
+  // Final analytics array
+  const result = habits.map((habit) => {
+    const hid = habit._id.toString();
+    const completed = grouped[hid]?.completed || 0;
+
+    const effectiveStart = new Date(Math.max(s.getTime(), habit.createdAt.getTime()));
+    const freq = countExpectedDays(effectiveStart,e,habit.weekFrequency) || 0;
+    const percentage = freq > 0 ? (completed / freq) * 100 : 0;
+
+    return {
+      habitId: hid,
+      habitName: habit.habitName,
+      isPositiveHabit: habit.isPositiveHabit,
+      palette: habit.palette,
+
+      completedHabitsInRange: completed,
+      habitFreqInRange: freq,
+      completionPercentage: percentage,
+    };
+  });
+
+  return result;
 };

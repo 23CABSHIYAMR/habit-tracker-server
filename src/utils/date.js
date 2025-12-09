@@ -38,3 +38,14 @@ export const validateDateAgainstHabit = (date, habit, userCreatedAt) => {
 };
 
 export { isAfter, isSameWeek };
+
+export const countExpectedDays = (rangeStart, rangeEnd, weekFrequency) => {
+  let count = 0;
+  const d = new Date(rangeStart.getTime());
+  while (d <= rangeEnd) {
+    const weekday = d.getUTCDay();
+    if (weekFrequency[weekday]) count++;
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return count;
+};

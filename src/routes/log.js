@@ -8,5 +8,6 @@ router.get("/date/:date", protect, logController.getLogsForDate);
 router.get("/range", protect, logController.getLogsInRange);
 router.post("/complete", protect, logController.completeHabit);
 router.delete("/uncomplete", protect, logController.uncompleteHabit);
+router.get("/analytics", protect, logController.analyticsForRange);
 
 export default router;

@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:["http://localhost:3000","https://habit-tracker-client-bay.vercel.app"] ,
+    origin:process.env.FRONTEND_URL ,
     credentials: true,
   })
 );
@@ -21,12 +21,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Routing
 app.use("/habits", habitRoutes);
 app.use("/habitLog", habitLogRoutes);
 app.use("/auth", authRoutes);
  
-// Start Server
 connectToDb().then(() => {
   app.listen(port, () => {
     console.log(`Server + DB running on port: ${port}`);

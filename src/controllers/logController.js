@@ -54,3 +54,17 @@ export const uncompleteHabit = async (req, res) => {
     res.status(err.status || 500).json({ error: err.message });
   }
 };
+
+export const analyticsForRange = async (req, res) => {
+  try {
+    const result = await logService.getAnalyticsForRange({
+      user: req.user,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};

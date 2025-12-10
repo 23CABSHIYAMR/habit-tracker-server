@@ -23,9 +23,9 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/server/habits", habitRoutes);
-app.use("/server/habitLog", habitLogRoutes);
-app.use("/server/auth", authRoutes);
+app.use("/habits", habitRoutes);
+app.use("/habitLog", habitLogRoutes);
+app.use("/auth", authRoutes);
 
 connectToDb().then(() => {
   app.listen(port, () => {

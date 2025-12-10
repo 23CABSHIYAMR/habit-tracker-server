@@ -61,6 +61,8 @@ export const analyticsForRange = async (req, res) => {
       user: req.user,
       startDate: req.query.startDate,
       endDate: req.query.endDate,
+      prevStartDate: req.query.prevStart,
+      prevEndDate: req.query.prevEnd,
     });
 
     res.json(result);

@@ -18,10 +18,10 @@ export const createHabit = async ({
 
   const weeklyTarget = weekFrequency.filter(Boolean).length;
   const lastHabit = await Habit.findOne({ userId })
-  .sort({ order: -1 })
-  .select("order");
+    .sort({ order: -1 })
+    .select("order");
 
-const order = lastHabit ? lastHabit.order + 1 : 1;
+  const order = lastHabit ? lastHabit.order + 1 : 1;
   const newHabit = await Habit.create({
     userId,
     habitName,
@@ -50,7 +50,6 @@ export const getHabits = async (userId) => {
 export const updateHabit = async ({ userId, habitId, updates }) => {
   const allowedFields = ["habitName", "isPositiveHabit", "palette", "order"];
   const habit = await Habit.findOne({ _id: habitId, userId });
-  console.log(habitId,updates,habit)
   if (!habit) throw { status: 404, message: "Habit not found" };
 
   for (const key of allowedFields) {

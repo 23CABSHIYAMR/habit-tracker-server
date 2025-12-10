@@ -1,5 +1,4 @@
 import User from "#models/User.js";
-import bcrypt from "bcryptjs";
 import { generateToken } from "#utils/generateToken.js";
 
 export const registerUser = async ({
@@ -25,13 +24,7 @@ export const registerUser = async ({
   });
   const token = generateToken({ id: user._id });
   return {
-    token,
-    user: {
-      id: user._id,
-      userName: user.userName,
-      email: user.email,
-      createdAt: user.createdAt,
-    },
+    token
   };
 };
 
@@ -49,13 +42,7 @@ export const loginUser = async ({ email, password }) => {
   const token = generateToken({ id: user._id });
 
   return {
-    token,
-    user: {
-      id: user._id,
-      userName: user.userName,
-      email: user.email,
-      createdAt: user.createdAt,
-    },
+    token
   };
 };
 
@@ -86,12 +73,6 @@ export const oauthLogin = async (googleUser) => {
   const token = generateToken({ id: user._id });
 
   return {
-    token,
-    user: {
-      id: user._id,
-      userName: user.userName,
-      email: user.email,
-      createdAt: user.createdAt,
-    },
+    token
   };
 };

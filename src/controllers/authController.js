@@ -4,16 +4,16 @@ const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "none",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
   maxAge: 60 * 60 * 24,
 };
 export const register = async (req, res) => {
   try {
-    const { token, user } = await authService.registerUser(req.body);
+    const { token } = await authService.registerUser(req.body);
 
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-    res.status(201).json({ user });
+    res.status(201).json({ message: "Signed in successfully" });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -21,9 +21,9 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { token, user } = await authService.loginUser(req.body);
+    const { token } = await authService.loginUser(req.body);
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-    res.json({ user });
+    res.json({ message: "Logged In successfully" });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -40,15 +40,11 @@ export const getMe = async (req, res) => {
 
 export const oauthRedirect = async (req, res) => {
   try {
-    const { token, user } = req.user;
+    const { token } = req.user;
 
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
 
-    const redirectURL = `${
-      process.env.FRONTEND_URL
-    }/auth/oauth?user=${encodeURIComponent(JSON.stringify(user))}`;
-
-    return res.redirect(redirectURL);
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/oauth`);
   } catch (err) {
     console.error("OAuth redirect error:", err);
     return res.redirect(
@@ -61,8 +57,8 @@ export const logout = async (req, res) => {
   try {
     res.clearCookie(COOKIE_NAME, {
       path: "/",
-      secure:  process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
     return res.json({ message: "Logged out successfully" });
   } catch (err) {

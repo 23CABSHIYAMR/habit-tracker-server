@@ -49,7 +49,7 @@ export const getLogsForDate = async ({ user, date }) => {
     results.push({
       habitId: habit._id,
       habitName: habit.habitName,
-      isPositiveHabit:habit.isPositiveHabit,
+      isPositiveHabit: habit.isPositiveHabit,
       palette: habit.palette,
       order: habit.order,
       weekFrequency: habit.weekFrequency,
@@ -131,50 +131,82 @@ export const uncompleteHabitForDate = async ({ user, habitId, date }) => {
 
   return { success: true };
 };
-export const getAnalyticsForRange = async ({ user, startDate, endDate }) => {
+
+export const getAnalyticsForRange = async ({
+  user,
+  startDate,
+  endDate,
+  prevStartDate,
+  prevEndDate,
+}) => {
   const s = normalizeUTC(startDate);
   const e = normalizeUTC(endDate);
   if (!s || !e) throw { status: 400, message: "Invalid date range" };
 
-  // Fetch user's habits
   const habits = await Habit.find({ userId: user._id })
-    .select("_id habitName palette weekFrequency isPositiveHabit")
+    .select("_id habitName palette weekFrequency isPositiveHabit createdAt")
     .lean();
 
-  // Fetch logs in the range
   const logs = await HabitLog.find({
     userId: user._id,
     date: { $gte: s, $lte: e },
   }).lean();
 
-  // Map logs by habitId
   const grouped = {};
   logs.forEach((log) => {
     const hid = log.habitId.toString();
-    if (!grouped[hid]) grouped[hid] = { completed: 0};
-    if (log.status === true) grouped[hid].completed++;
+    if (!grouped[hid]) grouped[hid] = { completed: 0 };
+    if (log.status) grouped[hid].completed++;
   });
 
-  // Final analytics array
-  const result = habits.map((habit) => {
+  const analyticsPerHabit = habits.map((habit) => {
     const hid = habit._id.toString();
     const completed = grouped[hid]?.completed || 0;
 
-    const effectiveStart = new Date(Math.max(s.getTime(), habit.createdAt.getTime()));
-    const freq = countExpectedDays(effectiveStart,e,habit.weekFrequency) || 0;
-    const percentage = freq > 0 ? (completed / freq) * 100 : 0;
+    const habitStartTs = habit.createdAt?.getTime() ?? s.getTime();
+    const effectiveStart = new Date(Math.max(s.getTime(), habitStartTs));
+
+    const freq =
+      habitStartTs > e.getTime()
+        ? 0
+        : countExpectedDays(effectiveStart, e, habit.weekFrequency) || 0;
+
+    const completionPercentage = freq > 0 ? (completed / freq) * 100 : 0;
 
     return {
       habitId: hid,
-      habitName: habit.habitName,
-      isPositiveHabit: habit.isPositiveHabit,
-      palette: habit.palette,
-
       completedHabitsInRange: completed,
       habitFreqInRange: freq,
-      completionPercentage: percentage,
+      completionPercentage,
     };
   });
 
-  return result;
+  // === TOTAL FOR CURRENT RANGE ===
+  let totalCompleted = 0,
+    totalExpected = 0;
+  analyticsPerHabit.forEach((h) => {
+    totalCompleted += h.completedHabitsInRange;
+    totalExpected += h.habitFreqInRange;
+  });
+
+  const totalCompletionPercentage =
+    totalExpected > 0 ? (totalCompleted / totalExpected) * 100 : 0;
+
+  // === PREVIOUS RANGE COMPARISON ===
+  let comparisonFromPrev = null;
+  if (prevStartDate && prevEndDate) {
+    const prev = await getAnalyticsForRange({
+      user,
+      startDate: prevStartDate,
+      endDate: prevEndDate,
+    });
+    const prevTotal = prev.totalCompletionPercentage;
+    comparisonFromPrev = totalCompletionPercentage - prevTotal;
+  }
+
+  return {
+    analyticSpecifics: analyticsPerHabit,
+    totalCompletionPercentage,
+    comparisonFromPrev,
+  };
 };

@@ -3,8 +3,8 @@ import * as authService from "#services/authService.js";
 const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
   maxAge: 60 * 60 * 24 * 10,
 };

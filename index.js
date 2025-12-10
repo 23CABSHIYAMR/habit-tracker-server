@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin:true,
+    origin:process.env.FRONTEND_URL,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -23,9 +23,9 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/habits", habitRoutes);
-app.use("/habitLog", habitLogRoutes);
-app.use("/auth", authRoutes);
+app.use("/server/habits", habitRoutes);
+app.use("/server/habitLog", habitLogRoutes);
+app.use("/server/auth", authRoutes);
 
 connectToDb().then(() => {
   app.listen(port, () => {

@@ -24,7 +24,7 @@ export const registerUser = async ({
   });
   const token = generateToken({ id: user._id });
   return {
-    token
+    token,
   };
 };
 

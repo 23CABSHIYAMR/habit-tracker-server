@@ -13,10 +13,12 @@ const app = express();
 
 app.use(
   cors({
-    origin:process.env.FRONTEND_URL ,
+    origin: [process.env.FRONTEND_URL,/\.vercel\.app$/ ],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -24,7 +26,7 @@ app.use(cookieParser());
 app.use("/habits", habitRoutes);
 app.use("/habitLog", habitLogRoutes);
 app.use("/auth", authRoutes);
- 
+
 connectToDb().then(() => {
   app.listen(port, () => {
     console.log(`Server + DB running on port: ${port}`);

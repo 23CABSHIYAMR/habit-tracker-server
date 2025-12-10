@@ -6,7 +6,7 @@ const COOKIE_OPTIONS = {
   secure: true,
   sameSite: "none",
   path: "/",
-  maxAge: 60 * 60 * 24,
+  maxAge: 60 * 60 * 24 * 10,
 };
 export const register = async (req, res) => {
   try {

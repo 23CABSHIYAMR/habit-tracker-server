@@ -6,6 +6,8 @@ export default async function protect(req, res, next) {
   try {
     const token = req.cookies?.token;
     console.log("token in middleware=>",token);
+    console.log("RAW COOKIE:", req.headers.cookie);
+
     if (!token) {
       return res.status(401).json({ error: "Not authorized, token missing" });
     }

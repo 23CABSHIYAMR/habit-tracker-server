@@ -4,9 +4,11 @@ import User from "../models/User.js";
 
 export default async function protect(req, res, next) {
   try {
-    const token = req.cookies?.token;
-    console.log("token in middleware=>",token);
-    console.log("RAW COOKIE:", req.headers.cookie);
+    let token;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
 
     if (!token) {
       return res.status(401).json({ error: "Not authorized, token missing" });

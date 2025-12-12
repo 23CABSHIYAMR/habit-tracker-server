@@ -19,12 +19,7 @@ passport.use(
           }`.trim() ||
           "Google User";
 
-        const { token, user } = await authService.oauthLogin({
-          email,
-          userName,
-        });
-
-        return done(null, { token, user });
+        return done(null, { email, userName });
       } catch (err) {
         return done(err, null);
       }

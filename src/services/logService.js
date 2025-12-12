@@ -132,6 +132,14 @@ export const uncompleteHabitForDate = async ({ user, habitId, date }) => {
   return { success: true };
 };
 
+function startOfDayUTC(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function endOfDayUTC(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+}
+
 export const getAnalyticsForRange = async ({
   user,
   startDate,
@@ -139,19 +147,23 @@ export const getAnalyticsForRange = async ({
   prevStartDate,
   prevEndDate,
 }) => {
-  const s = normalizeUTC(startDate);
-  const e = normalizeUTC(endDate);
+  const s = startOfDayUTC(new Date(startDate));
+  const e = endOfDayUTC(new Date(endDate));
+
   if (!s || !e) throw { status: 400, message: "Invalid date range" };
 
+  // --- FETCH HABITS ---
   const habits = await Habit.find({ userId: user._id })
     .select("_id habitName palette weekFrequency isPositiveHabit createdAt")
     .lean();
 
+  // --- FETCH LOGS IN FIXED UTC RANGE ---
   const logs = await HabitLog.find({
     userId: user._id,
     date: { $gte: s, $lte: e },
   }).lean();
 
+  // --- GROUP COMPLETED HABITS ---
   const grouped = {};
   logs.forEach((log) => {
     const hid = log.habitId.toString();
@@ -159,15 +171,16 @@ export const getAnalyticsForRange = async ({
     if (log.status) grouped[hid].completed++;
   });
 
+  // --- PER HABIT ANALYTICS ---
   const analyticsPerHabit = habits.map((habit) => {
     const hid = habit._id.toString();
     const completed = grouped[hid]?.completed || 0;
 
-    const habitStartTs = habit.createdAt?.getTime() ?? s.getTime();
-    const effectiveStart = new Date(Math.max(s.getTime(), habitStartTs));
+    const habitStart = startOfDayUTC(new Date(habit.createdAt));
+    const effectiveStart = new Date(Math.max(s.getTime(), habitStart.getTime()));
 
     const freq =
-      habitStartTs > e.getTime()
+      habitStart.getTime() > e.getTime()
         ? 0
         : countExpectedDays(effectiveStart, e, habit.weekFrequency) || 0;
 
@@ -181,9 +194,10 @@ export const getAnalyticsForRange = async ({
     };
   });
 
-  // === TOTAL FOR CURRENT RANGE ===
-  let totalCompleted = 0,
-    totalExpected = 0;
+  // --- TOTALS ---
+  let totalCompleted = 0;
+  let totalExpected = 0;
+
   analyticsPerHabit.forEach((h) => {
     totalCompleted += h.completedHabitsInRange;
     totalExpected += h.habitFreqInRange;
@@ -192,7 +206,7 @@ export const getAnalyticsForRange = async ({
   const totalCompletionPercentage =
     totalExpected > 0 ? (totalCompleted / totalExpected) * 100 : 0;
 
-  // === PREVIOUS RANGE COMPARISON ===
+  // --- PREVIOUS RANGE ---
   let comparisonFromPrev = null;
   if (prevStartDate && prevEndDate) {
     const prev = await getAnalyticsForRange({
@@ -200,8 +214,7 @@ export const getAnalyticsForRange = async ({
       startDate: prevStartDate,
       endDate: prevEndDate,
     });
-    const prevTotal = prev.totalCompletionPercentage;
-    comparisonFromPrev = totalCompletionPercentage - prevTotal;
+    comparisonFromPrev = totalCompletionPercentage - prev.totalCompletionPercentage;
   }
 
   return {

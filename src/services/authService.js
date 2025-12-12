@@ -42,7 +42,7 @@ export const loginUser = async ({ email, password }) => {
   const token = generateToken({ id: user._id });
 
   return {
-    token
+    token,
   };
 };
 
@@ -55,14 +55,13 @@ export const getMe = async (user) => {
   };
 };
 
-export const oauthLogin = async (googleUser) => {
-  const email = googleUser.email.toLowerCase();
+export const oauthLogin = async ({email,userName}) => {
 
   let user = await User.findOne({ email });
 
   if (!user) {
     user = await User.create({
-      userName: googleUser.userName,
+      userName,
       email,
       password: undefined,
       oauthSignup: true,
@@ -70,9 +69,5 @@ export const oauthLogin = async (googleUser) => {
     });
   }
 
-  const token = generateToken({ id: user._id });
-
-  return {
-    token
-  };
+  return { userId: user._id };
 };
